@@ -208,53 +208,50 @@ export class Tank {
     this.engine.setPosition(pos.GetX() + engineOffset[0], pos.GetY() + engineOffset[1], pos.GetZ() + engineOffset[2]);
     this.engine.setQuaternion(q);
 
-    // Turret follows body tilt but has independent yaw
-    // We want the turret to smoothly turn to face cameraYaw.
-    // Calculate the shortest angle path
-    let yawDiff = ((cameraYaw - this.turretYaw) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-    if (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+    // Turret follows body tilt but has independent world yaw targeting cameraYaw
+    let yawDiff = UT.ANGLE_DISTANCE(this.turretYaw, cameraYaw);
+    const turretTraverseSpeed = 2.0; 
+    this.turretYaw += yawDiff * (ts / 1000) * turretTraverseSpeed;
     
-    const turretTraverseSpeed = 1.5; // rad per second
-    const traverseAmount = turretTraverseSpeed * (ts / 1000);
+    // Get current world yaw of the body from physics rotation q
+    const bodyForward = q.rotateVector([0, 0, 1]);
+    const bodyYaw = Math.atan2(bodyForward[0], bodyForward[2]);
     
-    if (Math.abs(yawDiff) < traverseAmount) {
-        this.turretYaw = cameraYaw;
-    } else {
-        this.turretYaw += Math.sign(yawDiff) * traverseAmount;
-    }
-    
-    const localYaw = (this.turretYaw - this.rotation);
+    // Turret local yaw relative to chassis
+    const localYaw = UT.ANGLE_DISTANCE(bodyYaw, this.turretYaw);
     const localYawQ = Quaternion.createFromEuler(localYaw, 0, 0, 'YXZ');
     const turretQ = q.mul(localYawQ.w, localYawQ.x, localYawQ.y, localYawQ.z);
     
-    // Apply pitch exclusively to the barrel/turret gun
-    // Note: To pitch up, we rotate around X axis.
-    // Inverting cameraPitch so that looking down with camera aims barrel down.
+    // Apply pitch to barrel
     const maxDepress = 0.25; 
-    const maxElevate = 0.2;
+    const maxElevate = 0.3;
     const clampedPitch = Math.max(-maxElevate, Math.min(maxDepress, cameraPitch));
-    const pitchQ = Quaternion.createFromEuler(0, -clampedPitch, 0, 'YXZ'); // pitch is X axis rotation
+    const pitchQ = Quaternion.createFromEuler(0, -clampedPitch, 0, 'YXZ'); 
     const barrelQ = turretQ.mul(pitchQ.w, pitchQ.x, pitchQ.y, pitchQ.z);
 
-    // Increase turret elevation to sit properly on body top (body height 0.9 -> top 0.45)
-    // Turret height 0.75 -> center at 0.45 + 0.375 = 0.825. Using 0.83 for tiny clearance.
+    // Turret sits on body top (Height 0.9 -> top 0.45. Turret half_h 0.375 -> center 0.825)
+    const turretOffset = q.rotateVector([0, 0.825, 0]);
     const turretPos = [pos.GetX() + turretOffset[0], pos.GetY() + turretOffset[1], pos.GetZ() + turretOffset[2]];
     this.turret.setPosition(turretPos[0], turretPos[1], turretPos[2]);
     this.turret.setQuaternion(turretQ);
 
     const visualRecoil = this.shellRecoil > 0 ? this.shellRecoil * 0.45 : 0;
-    const barrelRelativePos = barrelQ.rotateVector([0, 0.1, -1.2 + visualRecoil]); // Slightly elevate barrel center
+    const barrelRelativePos = turretQ.rotateVector([0, 0.1, 0.5 + visualRecoil]); 
     this.barrel.setPosition(turretPos[0] + barrelRelativePos[0], turretPos[1] + barrelRelativePos[1], turretPos[2] + barrelRelativePos[2]);
     this.barrel.setQuaternion(barrelQ);
     
     // Hatch and antenna offsets relative to turret center
-    const hatchOffset = turretQ.rotateVector([0, 0.375 + 0.05, 0.3]);
+    const hatchOffset = turretQ.rotateVector([-0.3, 0.375, -0.2]);
     this.hatch.setPosition(turretPos[0] + hatchOffset[0], turretPos[1] + hatchOffset[1], turretPos[2] + hatchOffset[2]);
     this.hatch.setQuaternion(turretQ);
     
-    const antennaOffset = turretQ.rotateVector([-0.6, 0.375 + 0.7, 0.6]); // Lowered slightly to sit on mesh
+    const antennaOffset = turretQ.rotateVector([0.4, 0.375, -0.4]);
     this.antenna.setPosition(turretPos[0] + antennaOffset[0], turretPos[1] + antennaOffset[1], turretPos[2] + antennaOffset[2]);
     this.antenna.setQuaternion(turretQ);
+
+    const antennaNoseOffset = turretQ.rotateVector([0.4, 1.25, -0.4]);
+    this.antennaNose.setPosition(turretPos[0] + antennaNoseOffset[0], turretPos[1] + antennaNoseOffset[1], turretPos[2] + antennaNoseOffset[2]);
+    this.antennaNose.setQuaternion(turretQ);
     
     return { normal: didShootNormal, grenade: didShootGrenade };
   }

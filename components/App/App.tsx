@@ -356,28 +356,8 @@ const App = () => {
                         backdropFilter: 'blur(10px)',
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: Tokens.colors.contentDim, fontSize: '10px', fontFamily: Tokens.fonts.body, letterSpacing: '1px', textTransform: 'uppercase' }}>COMBAT POINTS</span>
-                            <span style={{ color: Tokens.colors.content, fontSize: '18px', fontFamily: Tokens.fonts.data, fontWeight: 600 }}>000000</span>
-                        </div>
-                    </div>
-                    
-                    <div style={{
-                        backgroundColor: Tokens.colors.surface,
-                        padding: Tokens.spacing.md,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: Tokens.spacing.sm,
-                        minWidth: '220px',
-                        border: `1px solid ${Tokens.colors.border}`,
-                        borderRadius: Tokens.radius.md,
-                        backdropFilter: 'blur(10px)',
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: Tokens.colors.contentDim, fontSize: '10px', fontFamily: Tokens.fonts.body, letterSpacing: '1px', textTransform: 'uppercase' }}>HEALTH BAR</span>
-                            <span style={{ color: Tokens.colors.content, fontSize: '12px', fontFamily: Tokens.fonts.data, fontWeight: 600 }}>{Math.max(0, Math.floor(playerHp))}%</span>
-                        </div>
-                        <div style={{ width: '100%', height: '2px', backgroundColor: Tokens.colors.surfaceLight, position: 'relative' }}>
-                            <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${Math.max(0, Math.min(100, playerHp))}%`, backgroundColor: '#39FF14', boxShadow: '0 0 8px rgba(57, 255, 20, 0.5)' }} />
+                            <span style={{ color: Tokens.colors.contentDim, fontSize: '10px', fontFamily: Tokens.fonts.body, letterSpacing: '1px', textTransform: 'uppercase' }}>RADAR CONTACTS</span>
+                            <span style={{ color: Tokens.colors.content, fontSize: '18px', fontFamily: Tokens.fonts.data, fontWeight: 600 }}>{enemyCount}</span>
                         </div>
                     </div>
                 </div>

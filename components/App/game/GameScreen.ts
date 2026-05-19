@@ -147,6 +147,9 @@ export class GameScreen extends Screen {
     this.camera.lookAt(0, 0, 0);
     this.camera.getView().setBgColor(0.53, 0.81, 0.92, 1.0); // Sky blue
     
+    // Ensure post renderer is initialized if we want to use it
+    gfx3PostRenderer.setParam(PostParam.PIXELATION_FACTOR, 1.0);
+    
     const tankPos = this.tank.body.getPosition();
     this.cameraLookTarget = [tankPos[0], tankPos[1] + 1.5, tankPos[2]];
     this.isReady = true;
@@ -572,18 +575,14 @@ export class GameScreen extends Screen {
   render(ts: number) {
     if (!this.isReady) return;
     
-    gfx3Manager.beginRender();
+    gfx3Manager.beginDrawing();
+    this.draw();
+    gfx3Manager.endDrawing();
     
-    // 1. Render scene to post-processing source texture
-    gfx3Manager.setDestinationTexture(gfx3PostRenderer.getSourceTexture());
-    gfx3Manager.beginPassRender(0);
+    gfx3Manager.beginRender();
+    gfx3Manager.beginPassRender(0); 
     gfx3MeshRenderer.render(ts);
     gfx3Manager.endPassRender();
-    
-    // 2. Render post-processing to canvas
-    gfx3Manager.setDestinationTexture(null);
-    gfx3PostRenderer.render(ts, gfx3Manager.getCurrentRenderingTexture());
-    
     gfx3Manager.endRender();
   }
 }

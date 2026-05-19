@@ -234,30 +234,34 @@ export class Enemy {
     const q = new Quaternion(currentRot.GetW(), currentRot.GetX(), currentRot.GetY(), currentRot.GetZ());
     const origin: vec3 = [pos.GetX(), pos.GetY(), pos.GetZ()];
 
-    const matBody = UT.MAT4_TRANSFORM(origin, ZERO, scale, q);
-    gfx3MeshRenderer.drawMesh(Enemy.bodyMesh, matBody);
+    if (this.hp > 0) {
+        // Body Mesh
+        const matBody = UT.MAT4_TRANSFORM(origin, ZERO, scale, q);
+        gfx3MeshRenderer.drawMesh(Enemy.bodyMesh, matBody);
 
-    // Track offsets scaled by human eyes to fit the 1.5 width body
-    const trackOffsetL = q.rotateVector([-0.8, -0.05, 0]);
-    const matTrackL = UT.MAT4_TRANSFORM([origin[0] + trackOffsetL[0], origin[1] + trackOffsetL[1], origin[2] + trackOffsetL[2]], ZERO, scale, q);
-    gfx3MeshRenderer.drawMesh(Enemy.trackLMesh, matTrackL);
+        // Track offsets scaled by human eyes to fit the 1.5 width body
+        const trackOffsetL = q.rotateVector([-0.8, -0.05, 0]);
+        const matTrackL = UT.MAT4_TRANSFORM([origin[0] + trackOffsetL[0], origin[1] + trackOffsetL[1], origin[2] + trackOffsetL[2]], ZERO, scale, q);
+        gfx3MeshRenderer.drawMesh(Enemy.trackLMesh, matTrackL);
 
-    const trackOffsetR = q.rotateVector([0.8, -0.05, 0]);
-    const matTrackR = UT.MAT4_TRANSFORM([origin[0] + trackOffsetR[0], origin[1] + trackOffsetR[1], origin[2] + trackOffsetR[2]], ZERO, scale, q);
-    gfx3MeshRenderer.drawMesh(Enemy.trackRMesh, matTrackR);
+        const trackOffsetR = q.rotateVector([0.8, -0.05, 0]);
+        const matTrackR = UT.MAT4_TRANSFORM([origin[0] + trackOffsetR[0], origin[1] + trackOffsetR[1], origin[2] + trackOffsetR[2]], ZERO, scale, q);
+        gfx3MeshRenderer.drawMesh(Enemy.trackRMesh, matTrackR);
 
-    const engineOffset = q.rotateVector([0, 0.2, 1.2]);
-    const matEngine = UT.MAT4_TRANSFORM([origin[0] + engineOffset[0], origin[1] + engineOffset[1], origin[2] + engineOffset[2]], ZERO, scale, q);
-    gfx3MeshRenderer.drawMesh(Enemy.engineMesh, matEngine);
+        const engineOffset = q.rotateVector([0, 0.2, 1.2]);
+        const matEngine = UT.MAT4_TRANSFORM([origin[0] + engineOffset[0], origin[1] + engineOffset[1], origin[2] + engineOffset[2]], ZERO, scale, q);
+        gfx3MeshRenderer.drawMesh(Enemy.engineMesh, matEngine);
 
-    // Turret sits on body top
-    const turretOffset = q.rotateVector([0, 0.45, 0]); 
-    const matTurret = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0], origin[1] + turretOffset[1], origin[2] + turretOffset[2]], ZERO, scale, q);
-    gfx3MeshRenderer.drawMesh(Enemy.turretMesh, matTurret);
+        // Turret sits on body top
+        // Correct height for body 1.2: 0.6 top + 0.4 turret_center = 1.0
+        const turretOffset = q.rotateVector([0, 1.0, 0]); 
+        const matTurret = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0], origin[1] + turretOffset[1], origin[2] + turretOffset[2]], ZERO, scale, q);
+        gfx3MeshRenderer.drawMesh(Enemy.turretMesh, matTurret);
 
-    const visualRecoil = this.recoil > 0 ? this.recoil * 0.3 : 0;
-    const barrelRelativePos = q.rotateVector([0, 0, -0.8 + visualRecoil]);
-    const matBarrel = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0] + barrelRelativePos[0], origin[1] + turretOffset[1] + barrelRelativePos[1], origin[2] + turretOffset[2] + barrelRelativePos[2]], ZERO, scale, q);
-    gfx3MeshRenderer.drawMesh(Enemy.barrelMesh, matBarrel);
+        const visualRecoil = this.recoil > 0 ? this.recoil * 0.3 : 0;
+        const barrelRelativePos = q.rotateVector([0, 0, -0.8 + visualRecoil]);
+        const matBarrel = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0] + barrelRelativePos[0], origin[1] + turretOffset[1] + barrelRelativePos[1], origin[2] + turretOffset[2] + barrelRelativePos[2]], ZERO, scale, q);
+        gfx3MeshRenderer.drawMesh(Enemy.barrelMesh, matBarrel);
+    }
   }
 }
