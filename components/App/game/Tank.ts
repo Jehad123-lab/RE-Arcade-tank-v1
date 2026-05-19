@@ -118,6 +118,14 @@ export class Tank {
     if (this.grenadeRecoil < 0) this.grenadeRecoil = 0;
     
     // Steering Logic
+    const targetAngularVelY = -moveDir.x * rotSpeed;
+    const joltAngVel = new Gfx3Jolt.Vec3(0, targetAngularVelY, 0);
+    gfx3JoltManager.bodyInterface.SetAngularVelocity(this.physicsBody.body.GetID(), joltAngVel);
+
+    // Update our internal tracking angle from physics body to keep muzzle/turret logic consistent
+    const currentRot = this.physicsBody.body.GetRotation();
+    const currentQ = new Quaternion(currentRot.GetW(), currentRot.GetX(), currentRot.GetY(), currentRot.GetZ());
+    // We update this.rotation based on target to keep it smooth for visual logic
     this.rotation -= moveDir.x * rotSpeed * (ts / 1000); 
     
     const throttle = moveDir.y;
@@ -147,52 +155,13 @@ export class Tank {
     gfx3JoltManager.bodyInterface.AddForce(this.physicsBody.body.GetID(), joltForce, Gfx3Jolt.EActivation_Activate);
     
     const pos = this.physicsBody.body.GetPosition();
-    let quat = Quaternion.createFromEuler(this.rotation, 0, 0, 'YXZ');
+    const visualYawQ = Quaternion.createFromEuler(this.rotation, 0, 0, 'YXZ');
     
-    // Cast rays from 4 corners down to find the ground normal for smooth banking
-    const hw = 1.4; // Half-width
-    const hd = 1.6; // Half-depth
-
-    const sinYaw = Math.sin(this.rotation);
-    const cosYaw = Math.cos(this.rotation);
-    const fx = -sinYaw, fz = -cosYaw;
-    const rx = cosYaw, rz = -sinYaw;
-    
-    const cx = pos.GetX();
-    const cy = pos.GetY();
-    const cz = pos.GetZ();
-
-    const getHitPoint = (dx: number, dz: number): vec3 => {
-      const wx = cx + rx * dx + fx * dz;
-      const wz = cz + rz * dx + fz * dz;
-      const ray = gfx3JoltManager.createRay(wx, cy, wz, wx, cy - 3.0, wz);
-      if (ray.fraction < 1.0 && ray.normal && ray.normal.GetY() > 0.5) {
-        return [wx, cy - ray.fraction * 3.0, wz];
-      }
-      // If no valid ground hit, assume the ground is flat at cy - 0.5
-      return [wx, cy - 0.5, wz]; 
-    };
-
-    const fl = getHitPoint(-hw, hd);
-    const fr = getHitPoint(hw, hd);
-    const bl = getHitPoint(-hw, -hd);
-    const br = getHitPoint(hw, -hd);
-
-    const vecFront = UT.VEC3_SCALE(UT.VEC3_ADD(fl, fr), 0.5);
-    const vecBack = UT.VEC3_SCALE(UT.VEC3_ADD(bl, br), 0.5);
-    const vecLeft = UT.VEC3_SCALE(UT.VEC3_ADD(fl, bl), 0.5);
-    const vecRight = UT.VEC3_SCALE(UT.VEC3_ADD(fr, br), 0.5);
-
-    const vForward = UT.VEC3_NORMALIZE(UT.VEC3_SUBSTRACT(vecFront, vecBack));
-    const vRight = UT.VEC3_NORMALIZE(UT.VEC3_SUBSTRACT(vecRight, vecLeft));
-
-    let targetUp = UT.VEC3_CROSS(vRight, vForward);
-    
-    if (UT.VEC3_LENGTH(targetUp) < 0.001) {
-       targetUp = [0, 1, 0];
-    } else {
-       targetUp = UT.VEC3_NORMALIZE(targetUp);
-       if (targetUp[1] < 0) targetUp = UT.VEC3_SCALE(targetUp, -1);
+    // Get ground normal from a single center ray - much more stable than 4 corners for physics
+    let targetUp: vec3 = [0, 1, 0];
+    const ray = gfx3JoltManager.createRay(pos.GetX(), pos.GetY() + 0.5, pos.GetZ(), pos.GetX(), pos.GetY() - 2.0, pos.GetZ());
+    if (ray.normal && ray.normal.GetY() > 0.5) {
+        targetUp = [ray.normal.GetX(), ray.normal.GetY(), ray.normal.GetZ()];
     }
     
     // Smoothly lerp the current up vector towards the ground normal
@@ -202,21 +171,20 @@ export class Tank {
     const up: vec3 = [0, 1, 0];
     let axis = UT.VEC3_CROSS(up, this.currentUp);
     const dot = UT.VEC3_DOT(up, this.currentUp);
-    // Only align if there's a valid angle
+    
+    let visualQ = visualYawQ;
+    // Only align visuals if there's a valid angle
     if (UT.VEC3_LENGTH(axis) > 0.001 && Math.abs(dot) < 0.999) {
         axis = UT.VEC3_NORMALIZE(axis);
         const clampedDot = Math.max(-1, Math.min(1, dot));
         const angle = Math.acos(clampedDot);
         const alignQ = Quaternion.createFromAxisAngle(axis, angle);
-        quat = alignQ.mul(quat.w, quat.x, quat.y, quat.z); // Multiply align * yaw
+        visualQ = alignQ.mul(visualYawQ.w, visualYawQ.x, visualYawQ.y, visualYawQ.z); 
     }
 
-    const joltQuat = new Gfx3Jolt.Quat(quat.x, quat.y, quat.z, quat.w);
-    // Sync physics body rotation with visual rotation (including ground alignment)
-    gfx3JoltManager.bodyInterface.SetRotation(this.physicsBody.body.GetID(), joltQuat, Gfx3Jolt.EActivation_Activate);
-
-    // Sync Mesh Positions
-    const q = quat;
+    // Sync Mesh Positions - We use the visually aligned visualQ for the body mesh,
+    // but the physics body itself stays managed by Jolt (and mostly upright)
+    const q = visualQ;
 
     this.body.setPosition(pos.GetX(), pos.GetY(), pos.GetZ());
     this.body.setQuaternion(q);
@@ -298,6 +266,9 @@ export class Tank {
     this.barrel.draw();
     this.hatch.draw();
     this.antenna.draw();
+
+    const origin = this.body.getPosition();
+    this.drawHealthBar(origin, this.hp, 100, cameraYaw);
   }
 
   drawHealthBar(origin: vec3, hp: number, maxHp: number, cameraYaw: number = 0) {

@@ -80,7 +80,7 @@ export class Enemy {
     }
 
     this.physicsBody = gfx3JoltManager.addBox({
-      width: 1.5, height: 0.6, depth: 2.2,
+      width: 1.0, height: 0.4, depth: 1.45, // Scaled down from (1.5, 0.6, 2.2) * 0.66
       x, y, z,
       motionType: Gfx3Jolt.EMotionType_Dynamic,
       layer: JOLT_LAYER_MOVING,
@@ -114,8 +114,13 @@ export class Enemy {
     if (angleDiff < -Math.PI) angleDiff += PI2;
     
     const rotSpeed = 2.0;    
-    this.rotation += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), rotSpeed * (ts / 1000));
+    const turnAmount = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), rotSpeed * (ts / 1000));
+    this.rotation += turnAmount;
     
+    // Use SetAngularVelocity for stable steering instead of SetRotation
+    const joltAngVel = new Gfx3Jolt.Vec3(0, Math.sign(angleDiff) * Math.min(Math.abs(angleDiff) * 5.0, rotSpeed), 0);
+    gfx3JoltManager.bodyInterface.SetAngularVelocity(this.physicsBody.body.GetID(), joltAngVel);
+
     // Simple Chase - Stop when close
     const speed = 6;
     let throttle = 0;
@@ -141,9 +146,9 @@ export class Enemy {
     gfx3JoltManager.bodyInterface.AddForce(this.physicsBody.body.GetID(), joltForce, Gfx3Jolt.EActivation_Activate);
     
     const curPos = this.physicsBody.body.GetPosition();
-    let quat = Quaternion.createFromEuler(this.rotation, 0, 0, 'YXZ');
+    const visualYawQ = Quaternion.createFromEuler(this.rotation, 0, 0, 'YXZ');
     
-    // Smooth banking
+    // Smooth banking visuals
     let targetUp: vec3 = [0, 1, 0];
     const ray = gfx3JoltManager.createRay(curPos.GetX(), curPos.GetY() + 0.5, curPos.GetZ(), curPos.GetX(), curPos.GetY() - 2.0, curPos.GetZ());
     if (ray.normal && ray.normal.GetY() > 0.5) {
@@ -156,16 +161,14 @@ export class Enemy {
     const up: vec3 = [0, 1, 0];
     let axis = UT.VEC3_CROSS(up, this.currentUp);
     const dot = UT.VEC3_DOT(up, this.currentUp);
+    let visualQ = visualYawQ;
     if (UT.VEC3_LENGTH(axis) > 0.001 && Math.abs(dot) < 0.999) {
         axis = UT.VEC3_NORMALIZE(axis);
         const clampedDot = Math.max(-1, Math.min(1, dot));
         const angle = Math.acos(clampedDot);
         const alignQ = Quaternion.createFromAxisAngle(axis, angle);
-        quat = alignQ.mul(quat.w, quat.x, quat.y, quat.z);
+        visualQ = alignQ.mul(visualYawQ.w, visualYawQ.x, visualYawQ.y, visualYawQ.z);
     }
-
-    const joltQuat = new Gfx3Jolt.Quat(quat.x, quat.y, quat.z, quat.w);
-    gfx3JoltManager.bodyInterface.SetRotation(this.physicsBody.body.GetID(), joltQuat, Gfx3Jolt.EActivation_Activate);
     
     let didShoot = false;
     let muzzlePos: vec3 | undefined = undefined;
@@ -173,7 +176,7 @@ export class Enemy {
 
     // Shoot Logic
     if (dist < 40 && Math.abs(angleDiff) < 0.2 && this.shootCooldown <= 0) {
-        const muzzleData = this.getMuzzleData(quat);
+        const muzzleData = this.getMuzzleData(visualQ);
         muzzlePos = muzzleData.muzzlePos;
         dir = muzzleData.dir;
         this.shootCooldown = 2.5; // Slightly longer cooldown
@@ -252,6 +255,8 @@ export class Enemy {
     const barrelRelativePos = q.rotateVector([0, 0, -0.8 + visualRecoil]);
     const matBarrel = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0] + barrelRelativePos[0], origin[1] + turretOffset[1] + barrelRelativePos[1], origin[2] + turretOffset[2] + barrelRelativePos[2]], ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.barrelMesh, matBarrel);
+
+    this.drawHealthBar(origin, this.hp, 100, cameraYaw);
   }
 
   drawHealthBar(origin: vec3, hp: number, maxHp: number, cameraYaw: number = 0) {
