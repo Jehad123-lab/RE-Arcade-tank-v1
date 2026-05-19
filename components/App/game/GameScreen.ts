@@ -415,7 +415,7 @@ export class GameScreen extends Screen {
         if (p.type === ProjectileType.GRENADE) {
             this.onProjectileEnvironmentImpact(p, pPos3);
         }
-        gfx3JoltManager.removeBody(p.body);
+        gfx3JoltManager.remove(p.body.bodyId);
         this.projectiles.splice(i, 1);
         continue;
       }
@@ -467,7 +467,7 @@ export class GameScreen extends Screen {
       }
 
       if (destroyed) {
-          gfx3JoltManager.removeBody(p.body);
+          gfx3JoltManager.remove(p.body.bodyId);
           this.projectiles.splice(i, 1);
       } else {
           p.lastVel = [curV.GetX(), curV.GetY(), curV.GetZ()];
@@ -509,7 +509,7 @@ export class GameScreen extends Screen {
                   expDeath.reset(ePos.GetX(), ePos.GetY(), ePos.GetZ(), [0.8, 0.2, 0.1], undefined, 2.5);
                   this.explosions.push(expDeath);
               }
-              gfx3JoltManager.removeBody(target.physicsBody);
+              gfx3JoltManager.remove(target.physicsBody.bodyId);
           }
       } else {
           // Hit Player
@@ -555,7 +555,7 @@ export class GameScreen extends Screen {
               gfx3JoltManager.bodyInterface.AddImpulse(enemy.physicsBody.body.GetID(), pushForce);
               
               if (enemy.hp <= 0) {
-                  gfx3JoltManager.removeBody(enemy.physicsBody);
+                  gfx3JoltManager.remove(enemy.physicsBody.bodyId);
               }
           }
       }

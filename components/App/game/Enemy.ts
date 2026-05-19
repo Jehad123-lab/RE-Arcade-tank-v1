@@ -84,7 +84,7 @@ export class Enemy {
       x, y, z,
       motionType: Gfx3Jolt.EMotionType_Dynamic,
       layer: JOLT_LAYER_MOVING,
-      settings: { mAngularDamping: 2.0, mLinearDamping: 1.5, mMassPropertiesOverride: 100.0, mAllowedDOFs: 23 }
+      settings: { mAngularDamping: 2.0, mMassPropertiesOverride: 100.0 }
     });
   }
 
@@ -161,7 +161,7 @@ export class Enemy {
         const clampedDot = Math.max(-1, Math.min(1, dot));
         const angle = Math.acos(clampedDot);
         const alignQ = Quaternion.createFromAxisAngle(axis, angle);
-        quat = Quaternion.multiply(alignQ, quat);
+        quat = alignQ.mul(quat.w, quat.x, quat.y, quat.z);
     }
 
     const joltQuat = new Gfx3Jolt.Quat(quat.x, quat.y, quat.z, quat.w);

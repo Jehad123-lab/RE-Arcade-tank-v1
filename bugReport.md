@@ -11,7 +11,14 @@ Tracking all issues, from critical bugs to minor suggestions.
 -   **[RESOLVED] TURRET INTERSECTION**: Turret center was at 0.675, body top at 0.45. Intersection caused Z-fighting/disappearing. Elevated to 0.85.
 -   **[RESOLVED] GRENADE DUD BUG**: Grenades didn't explode if they came to a rest before life expired. Added expiry explosion logic.
 -   **[RESOLVED] MOUSE LOOK/LOCK**: Added pointer lock and refined fire mappings for desktop feel.
--   **[RESOLVED] UI CLUTTER**: Virtual joysticks and action buttons now hide automatically in desktop mode.
+-   **[RESOLVED] ERRORBOUNDARY TS COMPILATION**: `ErrorBoundary` failed to compile due to missing React types and incorrect extension syntax. Fixed by installing `@types/react` and using `React.Component`.
+-   **[RESOLVED] JOLT API MISMATCHES**: `mLinearDamping` and `mAllowedDOFs` were non-existent properties in `Gfx3JoltBodySettings`. `removeBody` was missing. Fixed by removing invalid props and using `gfx3JoltManager.remove(bodyId)`.
+-   **[RESOLVED] QUATERNION MULTIPLY ERRORS**: `Quaternion.multiply` was not a static method. Fixed by using instance `mul` method.
+-   **[RESOLVED] REFINING APP LOGIC**: `App.tsx` had incorrect style property `touchNone` (renamed to `touchAction`) and incorrect player reference (renamed to `tank`).
+-   **[RESOLVED] MISSING DEPENDENCIES**: Various core libraries were missing from `package.json`. Installed `jszip`, `bdfparser`, `curve-interpolator`, etc.
+-   **[RESOLVED] DIMENSION LINE TYPE ERRORS**: `Stage.tsx` reported prop errors for `DimensionLine`. Fixed by using `React.FC` for better type inference.
+-   **[RESOLVED] MISSING VIEWPORT COMPONENT**: `Slot.tsx` imported a non-existent `Scene3D` component. Created a placeholder backfilled component.
+-   **[RESOLVED] ENV OPTIMIZATION**: Removed non-existent `optimizeBroadPhase` call in `Environment.ts`.
 
 ## Warning (Unexpected Behavior)
 

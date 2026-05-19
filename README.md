@@ -6,7 +6,7 @@ A high-performance 3D Tank Game built with the **ArcadeGPU** engine. This projec
 
 **Remix:** [ai.studio/apps/cd4779aa-58fb-43a6-8a2f-757bb5829982](https://ai.studio/apps/cd4779aa-58fb-43a6-8a2f-757bb5829982)
 
-## 🎮 Game Version: v0.3.1
+## 🎮 Game Version: v0.4.0
 *   **Engine:** ArcadeGPU v1.0
 *   **Theme:** Retro-Arcade / Cyberpunk
 *   **Performance:** 60FPS Target
@@ -17,7 +17,7 @@ A high-performance 3D Tank Game built with the **ArcadeGPU** engine. This projec
 *   **W A S D** - Drive the tank
 *   **MOUSE** - Look around and aim your tank turret
 *   **SPACE / LEFT CLICK** - Shoot normal projectiles (Thermal Rounds)
-*   **SHIFT / RIGHT CLICK** - Throw grenade (Plasma Charges)
+*   **SHIFT / RIGHT CLICK / E** - Throw grenade (Plasma Charges)
 *   **Virtual Joystick / Buttons** - On-screen controls for mobile players
 
 ## 📁 Directory Structure
@@ -28,6 +28,7 @@ A high-performance 3D Tank Game built with the **ArcadeGPU** engine. This projec
 │   ├── src/lib/             # Engine Source (gfx3, jolt, input, etc.)
 │   └── public/              # Core Assets (WASMs, standard textures)
 ├── components/
+│   ├── 3D/                  # 3D Viewport Components
 │   ├── App/                 # Main Application Components
 │   │   ├── game/            # Game Entities (Tank, Enemy, Environment, Explosion)
 │   │   └── App.tsx          # Main Game Screen Logic & UI Overlay

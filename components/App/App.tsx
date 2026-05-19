@@ -153,7 +153,7 @@ const Joystick = ({ onChange }: { onChange: (dir: { x: number, y: number }) => v
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                touchNone: 'none',
+                touchAction: 'none',
                 pointerEvents: 'auto',
             }}
             onPointerDown={(e) => {
@@ -210,8 +210,8 @@ const App = () => {
             if (gameScreenRef.current) {
                 const count = gameScreenRef.current.enemies.filter(e => e.hp > 0).length;
                 setEnemyCount(count);
-                if (gameScreenRef.current.player) {
-                    setPlayerHp(gameScreenRef.current.player.hp);
+                if (gameScreenRef.current.tank) {
+                    setPlayerHp(gameScreenRef.current.tank.hp);
                 }
             }
         }, 500);

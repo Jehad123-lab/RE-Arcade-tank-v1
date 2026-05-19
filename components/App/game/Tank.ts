@@ -64,7 +64,7 @@ export class Tank {
       x: 0, y: 0.5, z: 0,
       motionType: Gfx3Jolt.EMotionType_Dynamic,
       layer: JOLT_LAYER_MOVING,
-      settings: { mAngularDamping: 1.0, mLinearDamping: 0.5, mMassPropertiesOverride: 100.0, mAllowedDOFs: 23 } // Added RotationY (16) to DOFs (7|16=23)
+      settings: { mAngularDamping: 1.0, mMassPropertiesOverride: 100.0 } // Removed mLinearDamping and mAllowedDOFs
     });
   }
 
@@ -208,7 +208,7 @@ export class Tank {
         const clampedDot = Math.max(-1, Math.min(1, dot));
         const angle = Math.acos(clampedDot);
         const alignQ = Quaternion.createFromAxisAngle(axis, angle);
-        quat = Quaternion.multiply(alignQ, quat); // Multiply align * yaw
+        quat = alignQ.mul(quat.w, quat.x, quat.y, quat.z); // Multiply align * yaw
     }
 
     const joltQuat = new Gfx3Jolt.Quat(quat.x, quat.y, quat.z, quat.w);
@@ -251,7 +251,7 @@ export class Tank {
     
     const localYaw = (this.turretYaw - this.rotation);
     const localYawQ = Quaternion.createFromEuler(localYaw, 0, 0, 'YXZ');
-    const turretQ = Quaternion.multiply(q, localYawQ);
+    const turretQ = q.mul(localYawQ.w, localYawQ.x, localYawQ.y, localYawQ.z);
     
     // Apply pitch exclusively to the barrel/turret gun
     // Note: To pitch up, we rotate around X axis.
@@ -260,7 +260,7 @@ export class Tank {
     const maxElevate = 0.2;
     const clampedPitch = Math.max(-maxElevate, Math.min(maxDepress, cameraPitch));
     const pitchQ = Quaternion.createFromEuler(0, -clampedPitch, 0, 'YXZ'); // pitch is X axis rotation
-    const barrelQ = Quaternion.multiply(turretQ, pitchQ);
+    const barrelQ = turretQ.mul(pitchQ.w, pitchQ.x, pitchQ.y, pitchQ.z);
 
     // Increase turret elevation to sit properly on body top (body height 0.9 -> top 0.45)
     // Turret height 0.75 -> center at 0.45 + 0.375 = 0.825. Using 0.85 for safety.

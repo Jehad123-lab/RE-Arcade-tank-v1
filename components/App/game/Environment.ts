@@ -164,7 +164,6 @@ export class Environment {
     }
     
     this.initBatch();
-    gfx3JoltManager.optimizeBroadPhase();
 
     // Add clouds
     for (let i = 0; i < 20; i++) {

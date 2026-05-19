@@ -106,10 +106,10 @@ interface StageProps {
 /**
  * 📐 Technical Dimension Line
  */
-const DimensionLine = ({ 
-    x1, y1, x2, y2, label, offset = 0, color, position = 'top' 
-}: { 
+const DimensionLine: React.FC<{ 
     x1: number; y1: number; x2: number; y2: number; label: string; offset?: number; color: string; position?: 'top' | 'bottom' | 'left' | 'right' 
+}> = ({ 
+    x1, y1, x2, y2, label, offset = 0, color, position = 'top' 
 }) => {
     const { theme } = useTheme();
     
