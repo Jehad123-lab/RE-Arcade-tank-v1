@@ -122,11 +122,17 @@ export class Tank {
     const joltAngVel = new Gfx3Jolt.Vec3(0, targetAngularVelY, 0);
     gfx3JoltManager.bodyInterface.SetAngularVelocity(this.physicsBody.body.GetID(), joltAngVel);
 
-    // Update our internal tracking angle from physics body to keep muzzle/turret logic consistent
+    // Get physics rotation to extract current yaw
     const currentRot = this.physicsBody.body.GetRotation();
-    const currentQ = new Quaternion(currentRot.GetW(), currentRot.GetX(), currentRot.GetY(), currentRot.GetZ());
-    // We update this.rotation based on target to keep it smooth for visual logic
-    this.rotation -= moveDir.x * rotSpeed * (ts / 1000); 
+    const currentPhysQ = new Quaternion(currentRot.GetW(), currentRot.GetX(), currentRot.GetY(), currentRot.GetZ());
+    
+    // Smoothly update this.rotation (hull yaw) based on the physics body's actual orientation
+    // This prevents the visual model from "desyncing" or drifting from the collision shape.
+    const [[ax, ay, az], angle] = currentPhysQ.toAxisAngle();
+    const physYaw = ay > 0 ? angle : -angle; // Simplified yaw extraction
+    
+    // We keep our visual rotation synced with physics to avoid separation
+    this.rotation = physYaw; 
     
     const throttle = moveDir.y;
     const targetVelocity = throttle * speed;
@@ -232,13 +238,12 @@ export class Tank {
 
     // Increase turret elevation to sit properly on body top (body height 0.9 -> top 0.45)
     // Turret height 0.75 -> center at 0.45 + 0.375 = 0.825. Using 0.83 for tiny clearance.
-    const turretOffset = q.rotateVector([0, 0.83, 0]);
-    this.turret.setPosition(pos.GetX() + turretOffset[0], pos.GetY() + turretOffset[1], pos.GetZ() + turretOffset[2]);
+    const turretPos = [pos.GetX() + turretOffset[0], pos.GetY() + turretOffset[1], pos.GetZ() + turretOffset[2]];
+    this.turret.setPosition(turretPos[0], turretPos[1], turretPos[2]);
     this.turret.setQuaternion(turretQ);
 
     const visualRecoil = this.shellRecoil > 0 ? this.shellRecoil * 0.45 : 0;
     const barrelRelativePos = barrelQ.rotateVector([0, 0.1, -1.2 + visualRecoil]); // Slightly elevate barrel center
-    const turretPos = this.turret.getPosition();
     this.barrel.setPosition(turretPos[0] + barrelRelativePos[0], turretPos[1] + barrelRelativePos[1], turretPos[2] + barrelRelativePos[2]);
     this.barrel.setQuaternion(barrelQ);
     
@@ -257,7 +262,7 @@ export class Tank {
   /**
    * Renders all tank components.
    */
-  draw(cameraYaw: number = 0) {
+  draw() {
     this.body.draw();
     this.trackL.draw();
     this.trackR.draw();
@@ -266,37 +271,6 @@ export class Tank {
     this.barrel.draw();
     this.hatch.draw();
     this.antenna.draw();
-
-    const origin = this.body.getPosition();
-    this.drawHealthBar(origin, this.hp, 100, cameraYaw);
-  }
-
-  drawHealthBar(origin: vec3, hp: number, maxHp: number, cameraYaw: number = 0) {
-      const hpPercentage = Math.max(0, hp / maxHp);
-      const barMesh = hpPercentage > 0.5 ? Tank.hpGreen : Tank.hpRed;
-      
-      const barWidth = 1.5;
-      const barHeight = 0.2;
-      const barDepth = 0.2;
-      
-      // Calculate scale and position to shrink towards the left
-      const scaleX = barWidth * hpPercentage;
-      
-      // Billboarding: Rotate healthbar to face camera yaw
-      const barRotation = Quaternion.createFromEuler(cameraYaw, 0, 0, 'YXZ');
-      
-      // Calculate offset in billboard space so it shrinks correctly
-      const offsetLocal = [-(barWidth - scaleX) / 2, 0, 0] as vec3;
-      const offsetWorld = barRotation.rotateVector(offsetLocal);
-      
-      const matBar = UT.MAT4_TRANSFORM(
-          [origin[0] + offsetWorld[0], origin[1] + 3.0, origin[2] + offsetWorld[2]], 
-          [0, 0, 0], 
-          [scaleX, barHeight, barDepth], 
-          barRotation
-      );
-      
-      gfx3MeshRenderer.drawMesh(barMesh, matBar);
   }
 }
 

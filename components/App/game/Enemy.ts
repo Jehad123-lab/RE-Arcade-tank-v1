@@ -114,12 +114,16 @@ export class Enemy {
     if (angleDiff < -Math.PI) angleDiff += PI2;
     
     const rotSpeed = 2.0;    
-    const turnAmount = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), rotSpeed * (ts / 1000));
-    this.rotation += turnAmount;
     
-    // Use SetAngularVelocity for stable steering instead of SetRotation
+    // Use SetAngularVelocity for stable steering
     const joltAngVel = new Gfx3Jolt.Vec3(0, Math.sign(angleDiff) * Math.min(Math.abs(angleDiff) * 5.0, rotSpeed), 0);
     gfx3JoltManager.bodyInterface.SetAngularVelocity(this.physicsBody.body.GetID(), joltAngVel);
+
+    // Update this.rotation from the actual physics body to prevent visual drift
+    const currentRot = this.physicsBody.body.GetRotation();
+    const qPhys = new Quaternion(currentRot.GetW(), currentRot.GetX(), currentRot.GetY(), currentRot.GetZ());
+    const [[ax, ay, az], angle] = qPhys.toAxisAngle();
+    this.rotation = ay > 0 ? angle : -angle; 
 
     // Simple Chase - Stop when close
     const speed = 6;
@@ -255,35 +259,5 @@ export class Enemy {
     const barrelRelativePos = q.rotateVector([0, 0, -0.8 + visualRecoil]);
     const matBarrel = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0] + barrelRelativePos[0], origin[1] + turretOffset[1] + barrelRelativePos[1], origin[2] + turretOffset[2] + barrelRelativePos[2]], ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.barrelMesh, matBarrel);
-
-    this.drawHealthBar(origin, this.hp, 100, cameraYaw);
-  }
-
-  drawHealthBar(origin: vec3, hp: number, maxHp: number, cameraYaw: number = 0) {
-      const hpPercentage = Math.max(0, hp / maxHp);
-      const barMesh = hpPercentage > 0.5 ? Enemy.hpGreen : Enemy.hpRed;
-      
-      const barWidth = 1.5;
-      const barHeight = 0.2;
-      const barDepth = 0.2;
-      
-      // Calculate scale
-      const scaleX = barWidth * hpPercentage;
-      
-      // Billboarding
-      const barRotation = Quaternion.createFromEuler(cameraYaw, 0, 0, 'YXZ');
-      
-      // Offset local
-      const offsetLocal = [-(barWidth - scaleX) / 2, 0, 0] as vec3;
-      const offsetWorld = barRotation.rotateVector(offsetLocal);
-      
-      const matBar = UT.MAT4_TRANSFORM(
-          [origin[0] + offsetWorld[0], origin[1] + 2.5, origin[2] + offsetWorld[2]], 
-          [0, 0, 0], 
-          [scaleX, barHeight, barDepth], 
-          barRotation
-      );
-      
-      gfx3MeshRenderer.drawMesh(barMesh, matBar);
   }
 }

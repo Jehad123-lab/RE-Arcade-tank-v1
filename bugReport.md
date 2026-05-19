@@ -22,9 +22,9 @@ Tracking all issues, from critical bugs to minor suggestions.
 -   **[RESOLVED] ENEMY SCALE MISMATCH**: Enemy meshes were 1.5x larger than their physics bodies, causing grounding issues. Fixed by applying 0.66x scale to enemy models and offsets.
 -   **[RESOLVED] TANK MODEL ALIGNMENT**: Refined turret, hatch, antenna, and track offsets in `Tank.ts` to improve structural cohesion and ground contact.
 -   **[RESOLVED] ENEMY MUZZLE DESYNC**: Enemy projectiles were spawning from unscaled coordinates. Adjusted `getMuzzleData` to match 0.66x visual scaling.
+-   **[RESOLVED] UNIT HEALTH BARS**: Removed HP bars as requested to keep UI minimal.
+-   **[RESOLVED] COMPONENT SEPARATION**: Fixed bug where tank parts (turret, tracks) would drift from the hull. Synchronized all visual rotations and world-space offsets with the physics body simulation.
 -   **[RESOLVED] TANK & ENEMY STEERING JITTER**: Decoupled visual banking from physics rotation. Switched to `SetAngularVelocity` for steering and single-ray ground alignment to prevent physics "fights" and jittering.
--   **[RESOLVED] ENEMY PHYSICS SCALE**: Shrank enemy physics bodies to match the 0.66x visual scale, ensuring visual-to-collision consistency.
--   **[RESOLVED] UNIT HEALTH BARS**: Enabled billboarded HP bars for player and enemies for better feedback.
 
 ## Warning (Unexpected Behavior)
 
