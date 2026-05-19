@@ -185,17 +185,23 @@ export class Enemy {
   }
   
   getMuzzleData(q: Quaternion): { muzzlePos: vec3, dir: vec3 } {
+    const ENEMY_SCALE = 0.66;
     const direction = q.rotateVector([0, 0, -1]); 
     const currentRot = this.physicsBody.body.GetRotation();
     const bodyQ = new Quaternion(currentRot.GetW(), currentRot.GetX(), currentRot.GetY(), currentRot.GetZ());
     
     const visualRecoil = this.recoil > 0 ? this.recoil * 0.3 : 0;
+    // Barrel and turret offsets must match the scaled visual model
+    const turretHeightOffset = 0.45; 
     const barrelRelativePos = bodyQ.rotateVector([0, 0, -0.8 + visualRecoil]);
     const pos = this.physicsBody.body.GetPosition();
-    const bPos = [pos.GetX() + barrelRelativePos[0], pos.GetY() + 0.45 + barrelRelativePos[1], pos.GetZ() + barrelRelativePos[2]];
+    const bPos = [
+      pos.GetX() + barrelRelativePos[0], 
+      pos.GetY() + turretHeightOffset + barrelRelativePos[1], 
+      pos.GetZ() + barrelRelativePos[2]
+    ];
 
-    // Barrel length is 1.5, so half-length is 0.75. 
-    // We add a small offset to ensure it's just outside the tip.
+    // Barrel length is 1.5, so half-length is 0.75.
     const tipOffset = 0.85; 
     const startPos = [
       bPos[0] + direction[0] * tipOffset,
@@ -212,7 +218,8 @@ export class Enemy {
   draw(cameraYaw: number = 0) {
     if (this.hp <= 0) return;
 
-    const scale: vec3 = [1, 1, 1];
+    const ENEMY_SCALE = 0.66;
+    const scale: vec3 = [ENEMY_SCALE, ENEMY_SCALE, ENEMY_SCALE];
     const ZERO: vec3 = [0,0,0];
 
     const pos = this.physicsBody.body.GetPosition();
@@ -223,11 +230,12 @@ export class Enemy {
     const matBody = UT.MAT4_TRANSFORM(origin, ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.bodyMesh, matBody);
 
-    const trackOffsetL = q.rotateVector([-0.8, -0.1, 0]);
+    // Track offsets scaled by human eyes to fit the 1.5 width body
+    const trackOffsetL = q.rotateVector([-0.8, -0.05, 0]);
     const matTrackL = UT.MAT4_TRANSFORM([origin[0] + trackOffsetL[0], origin[1] + trackOffsetL[1], origin[2] + trackOffsetL[2]], ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.trackLMesh, matTrackL);
 
-    const trackOffsetR = q.rotateVector([0.8, -0.1, 0]);
+    const trackOffsetR = q.rotateVector([0.8, -0.05, 0]);
     const matTrackR = UT.MAT4_TRANSFORM([origin[0] + trackOffsetR[0], origin[1] + trackOffsetR[1], origin[2] + trackOffsetR[2]], ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.trackRMesh, matTrackR);
 
@@ -235,7 +243,8 @@ export class Enemy {
     const matEngine = UT.MAT4_TRANSFORM([origin[0] + engineOffset[0], origin[1] + engineOffset[1], origin[2] + engineOffset[2]], ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.engineMesh, matEngine);
 
-    const turretOffset = q.rotateVector([0, 0.45, 0]);
+    // Turret sits on body top
+    const turretOffset = q.rotateVector([0, 0.45, 0]); 
     const matTurret = UT.MAT4_TRANSFORM([origin[0] + turretOffset[0], origin[1] + turretOffset[1], origin[2] + turretOffset[2]], ZERO, scale, q);
     gfx3MeshRenderer.drawMesh(Enemy.turretMesh, matTurret);
 

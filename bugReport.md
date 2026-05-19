@@ -19,6 +19,9 @@ Tracking all issues, from critical bugs to minor suggestions.
 -   **[RESOLVED] DIMENSION LINE TYPE ERRORS**: `Stage.tsx` reported prop errors for `DimensionLine`. Fixed by using `React.FC` for better type inference.
 -   **[RESOLVED] MISSING VIEWPORT COMPONENT**: `Slot.tsx` imported a non-existent `Scene3D` component. Created a placeholder backfilled component.
 -   **[RESOLVED] ENV OPTIMIZATION**: Removed non-existent `optimizeBroadPhase` call in `Environment.ts`.
+-   **[RESOLVED] ENEMY SCALE MISMATCH**: Enemy meshes were 1.5x larger than their physics bodies, causing grounding issues. Fixed by applying 0.66x scale to enemy models and offsets.
+-   **[RESOLVED] TANK MODEL ALIGNMENT**: Refined turret, hatch, antenna, and track offsets in `Tank.ts` to improve structural cohesion and ground contact.
+-   **[RESOLVED] ENEMY MUZZLE DESYNC**: Enemy projectiles were spawning from unscaled coordinates. Adjusted `getMuzzleData` to match 0.66x visual scaling.
 
 ## Warning (Unexpected Behavior)
 
